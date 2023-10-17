@@ -89,7 +89,11 @@ void MobileManipulatorDummyVisualization::launchVisualizerNode(ros::NodeHandle& 
   }
 
   robotStatePublisherPtr_.reset(new robot_state_publisher::RobotStatePublisher(tree));
-  robotStatePublisherPtr_->publishFixedTransforms(true);
+#if ROS_VERSION_MINOR <= 14
+    robotStatePublisherPtr_->publishFixedTransforms("", true);
+#else
+    robotStatePublisherPtr_->publishFixedTransforms(true);
+#endif
 
   stateOptimizedPublisher_ = nodeHandle.advertise<visualization_msgs::MarkerArray>("/mobile_manipulator/optimizedStateTrajectory", 1);
   stateOptimizedPosePublisher_ = nodeHandle.advertise<geometry_msgs::PoseArray>("/mobile_manipulator/optimizedPoseTrajectory", 1);
@@ -155,10 +159,17 @@ void MobileManipulatorDummyVisualization::publishObservation(const ros::Time& ti
   for (size_t i = 0; i < modelInfo_.dofNames.size(); i++) {
     jointPositions[modelInfo_.dofNames[i]] = j_arm(i);
   }
+
   for (const auto& name : removeJointNames_) {
     jointPositions[name] = 0.0;
   }
+
+#if ROS_VERSION_MINOR <= 14
+  robotStatePublisherPtr_->publishTransforms(jointPositions, timeStamp, "");
+#else
   robotStatePublisherPtr_->publishTransforms(jointPositions, timeStamp);
+#endif
+
 }
 
 /******************************************************************************************************/

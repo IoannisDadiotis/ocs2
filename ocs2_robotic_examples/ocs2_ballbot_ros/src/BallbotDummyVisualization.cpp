@@ -81,7 +81,12 @@ void BallbotDummyVisualization::update(const SystemObservation& observation, con
                                                {"jbase_z", observation.state(2)},
                                                {"jbase_y", observation.state(3)},
                                                {"jbase_x", observation.state(4)}};
+#if ROS_VERSION_MINOR <= 14
+  robotStatePublisherPtr_->publishTransforms(jointPositions, timeMsg, "");
+#else
   robotStatePublisherPtr_->publishTransforms(jointPositions, timeMsg);
+#endif
+
 }
 
 void BallbotDummyVisualization::launchVisualizerNode(ros::NodeHandle& nodeHandle) {
@@ -97,7 +102,12 @@ void BallbotDummyVisualization::launchVisualizerNode(ros::NodeHandle& nodeHandle
   }
 
   robotStatePublisherPtr_.reset(new robot_state_publisher::RobotStatePublisher(tree));
+#if ROS_VERSION_MINOR <= 14
+  robotStatePublisherPtr_->publishFixedTransforms("", true);
+#else
   robotStatePublisherPtr_->publishFixedTransforms(true);
+#endif
+
 }
 
 }  // namespace ballbot

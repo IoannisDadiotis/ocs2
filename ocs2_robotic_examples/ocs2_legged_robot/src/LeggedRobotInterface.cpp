@@ -58,6 +58,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
+// self-collision
+#include <ocs2_core/misc/LoadStdVectorOfPair.h>
+#include <ocs2_self_collision/SelfCollisionConstraint.h>
+#include <ocs2_self_collision/SelfCollisionConstraintCppAd.h>
+#include <ocs2_core/soft_constraint/StateSoftConstraint.h>
+
+//#include "ocs2_centauro/constraint/CentauroSelfCollisionConstraint.h"
+
 namespace ocs2 {
 namespace legged_robot {
 
@@ -181,6 +189,14 @@ void LeggedRobotInterface::setupOptimalConrolProblem(const std::string& taskFile
                                             getZeroVelocityConstraint(*eeKinematicsPtr, i, useAnalyticalGradientsConstraints));
     problemPtr_->equalityConstraintPtr->add(footName + "_normalVelocity",
                                             getNormalVelocityConstraint(*eeKinematicsPtr, i, useAnalyticalGradientsConstraints));
+  }
+
+  // self-collision avoidance constraint
+  bool activateSelfCollision = true;
+  if (activateSelfCollision) {
+    std::cout << "*********** Self-collision avoidance" << std::endl;
+    problemPtr_->stateSoftConstraintPtr->add(
+        "selfCollision", getSelfCollisionConstraint(taskFile, urdfFile, "selfCollision"));
   }
 
   // Pre-computation
@@ -366,6 +382,62 @@ std::unique_ptr<StateInputConstraint> LeggedRobotInterface::getNormalVelocityCon
   } else {
     return std::unique_ptr<StateInputConstraint>(new NormalVelocityConstraintCppAd(*referenceManagerPtr_, eeKinematics, contactPointIndex));
   }
+}
+
+/******************************************************************************************************/
+/******************************************************************************************************/
+/******************************************************************************************************/
+std::unique_ptr<StateCost> LeggedRobotInterface::getSelfCollisionConstraint(const std::string& taskFile, const std::string& urdfFile,
+                                                                            const std::string& prefix) {
+  std::vector<std::pair<size_t, size_t>> collisionObjectPairs;
+  std::vector<std::pair<std::string, std::string>> collisionLinkPairs;
+  scalar_t mu = 1e-2;
+  scalar_t delta = 1e-3;
+  scalar_t minimumDistance = 0.0;
+
+  boost::property_tree::ptree pt;
+  boost::property_tree::read_info(taskFile, pt);
+  std::cerr << "\n #### SelfCollision Settings: ";
+  std::cerr << "\n #### =============================================================================\n";
+  loadData::loadPtreeValue(pt, mu, prefix + ".mu", true);
+  loadData::loadPtreeValue(pt, delta, prefix + ".delta", true);
+  loadData::loadPtreeValue(pt, minimumDistance, prefix + ".minimumDistance", true);
+  loadData::loadStdVectorOfPair(taskFile, prefix + ".collisionObjectPairs", collisionObjectPairs, true);
+  loadData::loadStdVectorOfPair(taskFile, prefix + ".collisionLinkPairs", collisionLinkPairs, true);
+  std::cerr << " #### =============================================================================\n";
+
+  PinocchioGeometryInterface geometryInterface(*pinocchioInterfacePtr_, collisionLinkPairs, collisionObjectPairs);
+
+  const size_t numCollisionPairs = geometryInterface.getNumCollisionPairs();
+  std::cerr << "SelfCollision: Testing for " << numCollisionPairs << " collision pairs\n";
+
+  std::unique_ptr<StateConstraint> constraint;
+
+  // no caching/no precomputations
+  const CentroidalModelPinocchioMapping pinocchioMapping(centroidalModelInfo_);
+
+  // CppAd update callback
+//  const auto infoCppAd = centroidalModelInfo_.toCppAd();
+//  auto velocityUpdateCallback = [&infoCppAd](const ad_vector_t& state, PinocchioInterfaceCppAd& pinocchioInterfaceAd) {
+//    const ad_vector_t q = centroidal_model::getGeneralizedCoordinates(state, infoCppAd);
+//    updateCentroidalDynamics(pinocchioInterfaceAd, infoCppAd, q);
+//  };
+
+  // Non-CppAd update callback
+  const auto info = centroidalModelInfo_;
+  auto velocityUpdateCallback = [this](const vector_t& state, PinocchioInterface& pinocchioInterface) {
+    const vector_t q = centroidal_model::getGeneralizedCoordinates(state, centroidalModelInfo_);
+    updateCentroidalDynamics(pinocchioInterface, centroidalModelInfo_, q);
+  };
+  // strangely SelfCollisionConstraintCppAd does not accept CentroidalModelPinocchioMappingCppAd
+  constraint = std::unique_ptr<StateConstraint>(new SelfCollisionConstraintCppAd(
+      *pinocchioInterfacePtr_, pinocchioMapping, std::move(geometryInterface), minimumDistance,
+      velocityUpdateCallback, "self_collision", modelSettings_.modelFolderCppAd, modelSettings_.recompileLibrariesCppAd, true));
+
+  std::cout << "--------------------- Self collision avoidance" << std::endl;
+  std::unique_ptr<PenaltyBase> penalty(new RelaxedBarrierPenalty({mu, delta}));
+
+  return std::unique_ptr<StateCost>(new StateSoftConstraint(std::move(constraint), std::move(penalty)));
 }
 
 }  // namespace legged_robot

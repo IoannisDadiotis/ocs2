@@ -19,6 +19,8 @@ add_message_files(
     mpc_flattened_controller.msg
     lagrangian_metrics.msg
     multiplier.msg
+    joint_impedance_mapped_policy.msg
+    joint_acceleration_mapped_policy.msg
 )
 
 add_service_files(

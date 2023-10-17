@@ -65,7 +65,7 @@ void GeometryInterfaceVisualization::publishDistances(const ocs2::vector_t& q) {
   constexpr size_t numMarkersPerResult = 5;
 
   visualization_msgs::Marker markerTemplate;
-  markerTemplate.color = ros_msg_helpers::getColor({0, 1, 0}, 1);
+  markerTemplate.color = ros_msg_helpers::getColor({0, 1, 0}, 0.4);
   markerTemplate.header.frame_id = pinocchioWorldFrame_;
   markerTemplate.header.stamp = ros::Time::now();
   markerTemplate.pose.orientation = ros_msg_helpers::getOrientationMsg({1, 0, 0, 0});

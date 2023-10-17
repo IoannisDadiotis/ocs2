@@ -78,6 +78,7 @@ size_t getNumberOfPrecedingEvents(const scalar_array_t& timeTrajectory, const si
     return 0;
   }
 
+  // check if given time match any event time
   const auto eventIndexItr = std::find_if(postEventIndices.cbegin(), postEventIndices.cend(), [&](size_t postEventInd) {
     return numerics::almost_eq(eventTime, timeTrajectory[postEventInd - 1]);
   });

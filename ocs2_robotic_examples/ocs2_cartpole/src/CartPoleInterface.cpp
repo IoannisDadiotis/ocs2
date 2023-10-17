@@ -115,7 +115,7 @@ CartPoleInterface::CartPoleInterface(const std::string& taskFile, const std::str
   auto getConstraint = [&]() {
     constexpr size_t numIneqConstraint = 2;
     const vector_t e = (vector_t(numIneqConstraint) << cartPoleParameters.maxInput_, cartPoleParameters.maxInput_).finished();
-    const vector_t D = (vector_t(numIneqConstraint) << 1.0, -1.0).finished();
+    const vector_t D = (vector_t(numIneqConstraint) << 1.0, -1.0).finished();       // -1 sets corresponds to upper limit
     const matrix_t C = matrix_t::Zero(numIneqConstraint, STATE_DIM);
     return std::unique_ptr<StateInputConstraint>(new LinearStateInputConstraint(e, C, D));
   };

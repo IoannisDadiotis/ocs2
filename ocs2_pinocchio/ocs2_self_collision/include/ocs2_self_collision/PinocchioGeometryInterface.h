@@ -53,7 +53,8 @@ class PinocchioGeometryInterface final {
    * @param [in] collisionObjectPairs: List of collision object index pairs
    */
   PinocchioGeometryInterface(const PinocchioInterface& pinocchioInterface,
-                             const std::vector<std::pair<size_t, size_t>>& collisionObjectPairs);
+                             const std::vector<std::pair<size_t, size_t>>& collisionObjectPairs,
+                             const std::string& urdfPath = "");
 
   /**
    * Constructor
@@ -65,7 +66,8 @@ class PinocchioGeometryInterface final {
    */
   PinocchioGeometryInterface(const PinocchioInterface& pinocchioInterface,
                              const std::vector<std::pair<std::string, std::string>>& collisionLinkPairs,
-                             const std::vector<std::pair<size_t, size_t>>& collisionObjectPairs = std::vector<std::pair<size_t, size_t>>());
+                             const std::vector<std::pair<size_t, size_t>>& collisionObjectPairs = std::vector<std::pair<size_t, size_t>>(),
+                             const std::string& urdfPath = "");
 
   /**
    * Compute collision pair distances
@@ -86,7 +88,12 @@ class PinocchioGeometryInterface final {
 
  private:
   // Construction helpers
-  void buildGeomFromPinocchioInterface(const PinocchioInterface& pinocchioInterface, pinocchio::GeometryModel& geomModel);
+  /**
+   * Build geometryModel of the robot. urdfPath is optional, it can be useful for constructing the geometryModel directly
+   * from the urdf (e.g. when the urdf includes <collision_checking> tags which are not considered otherwise)
+  **/
+  void buildGeomFromPinocchioInterface(const PinocchioInterface& pinocchioInterface, pinocchio::GeometryModel& geomModel,
+                                       const std::string& urdfPath);
   void addCollisionObjectPairs(const PinocchioInterface& pinocchioInterface,
                                const std::vector<std::pair<size_t, size_t>>& collisionObjectPairs);
   void addCollisionLinkPairs(const PinocchioInterface& pinocchioInterface,

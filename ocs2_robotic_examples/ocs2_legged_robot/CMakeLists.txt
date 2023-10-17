@@ -14,6 +14,7 @@ set(CATKIN_PACKAGE_DEPENDENCIES
   ocs2_pinocchio_interface
   ocs2_centroidal_model
   ocs2_robotic_assets
+  ocs2_self_collision
 )
 
 find_package(catkin REQUIRED COMPONENTS
@@ -149,6 +150,8 @@ catkin_add_gtest(${PROJECT_NAME}_test
   test/constraint/testEndEffectorLinearConstraint.cpp
   test/constraint/testFrictionConeConstraint.cpp
   test/constraint/testZeroForceConstraint.cpp
+  test/testSelfCollision.cpp
+
 )
 target_include_directories(${PROJECT_NAME}_test PRIVATE
   test/include

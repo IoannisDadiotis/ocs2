@@ -116,6 +116,7 @@ auto CentroidalModelPinocchioMappingTpl<SCALAR>::getOcs2Jacobian(const vector_t&
   const auto& data = pinocchioInterfacePtr_->getData();
   const auto& info = centroidalModelInfo_;
   assert(info.stateDim == state.rows());
+  assert(pinocchioInterfacePtr_ != nullptr);
 
   // Partial derivatives of joint velocities
   matrix_t jointVelocitiesDerivativeInput = matrix_t::Zero(info.actuatedDofNum, info.inputDim);
@@ -137,7 +138,7 @@ auto CentroidalModelPinocchioMappingTpl<SCALAR>::getOcs2Jacobian(const vector_t&
       pinocchio::translateForceSet(data.dHdq, data.com[0], dhdq.const_cast_derived());
       for (size_t k = 0; k < model.nv; ++k) {
         dhdq.template block<3, 1>(pinocchio::Force::ANGULAR, k) +=
-            data.hg.linear().cross(data.dFda.template block<3, 1>(pinocchio::Force::LINEAR, k)) / data.Ig.mass();
+            data.hg.linear().cross(data.dFda.template block<3, 1>(pinocchio::Force::LINEAR, k)) / info.robotMass;
       }
       dhdq.middleCols(3, 3) = data.dFdq.middleCols(3, 3);
       const auto Aj = A.rightCols(info.actuatedDofNum);

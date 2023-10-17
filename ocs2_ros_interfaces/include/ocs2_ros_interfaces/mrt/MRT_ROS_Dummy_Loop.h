@@ -73,7 +73,7 @@ class MRT_ROS_Dummy_Loop {
 
  protected:
   /**
-   * A user-defined function which modifies the observation before publishing.
+   * A user-defined function which modifies the observation before publishing. Currently seems to do nothing.
    *
    * @param [in] observation: The current observation.
    */

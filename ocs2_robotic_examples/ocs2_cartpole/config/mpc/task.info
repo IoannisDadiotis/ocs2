@@ -72,8 +72,8 @@ mpc
 
 bounds_penalty_config
 {
-  scale                       0.1
-  stepSize                    1.0
+  scale                       0.1               ; a penalty term \pho that acts as a scaling factor for the total penalty.
+  stepSize                    1.0               ; step-size \alpha for updating Lagrange multiplier through a gradient ascent step
 }
 
 ; initial state

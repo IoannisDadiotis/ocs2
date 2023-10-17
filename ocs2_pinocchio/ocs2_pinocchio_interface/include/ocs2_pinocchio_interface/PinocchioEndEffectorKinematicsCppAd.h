@@ -101,13 +101,20 @@ class PinocchioEndEffectorKinematicsCppAd final : public EndEffectorKinematics<s
 
   std::vector<vector3_t> getPosition(const vector_t& state) const override;
   std::vector<vector3_t> getVelocity(const vector_t& state, const vector_t& input) const override;
+  std::vector<vector3_t> getAngularVelocity(const vector_t& state, const vector_t& input) const override;
   std::vector<vector3_t> getOrientationError(const vector_t& state, const std::vector<quaternion_t>& referenceOrientations) const override;
+  std::vector<vector_t> getOrientation(const vector_t& state) const override;           // get absolute orientation
+
 
   std::vector<VectorFunctionLinearApproximation> getPositionLinearApproximation(const vector_t& state) const override;
   std::vector<VectorFunctionLinearApproximation> getVelocityLinearApproximation(const vector_t& state,
                                                                                 const vector_t& input) const override;
+  std::vector<VectorFunctionLinearApproximation> getAngularVelocityLinearApproximation(const vector_t& state,
+                                                                                       const vector_t& input) const override;
   std::vector<VectorFunctionLinearApproximation> getOrientationErrorLinearApproximation(
       const vector_t& state, const std::vector<quaternion_t>& referenceOrientations) const override;
+  std::vector<VectorFunctionLinearApproximation> getOrientationLinearApproximation(const vector_t& state) const override;   // absolute orientation
+
 
  private:
   PinocchioEndEffectorKinematicsCppAd(const PinocchioEndEffectorKinematicsCppAd& rhs);
@@ -119,9 +126,17 @@ class PinocchioEndEffectorKinematicsCppAd final : public EndEffectorKinematics<s
   ad_vector_t getOrientationErrorCppAd(PinocchioInterfaceCppAd& pinocchioInterfaceCppAd,
                                        const PinocchioStateInputMapping<ad_scalar_t>& mapping, const ad_vector_t& state,
                                        const ad_vector_t& params);
+  // test orientation
+  ad_vector_t getOrientationCppAd(PinocchioInterfaceCppAd& pinocchioInterfaceCppAd,
+                                  const PinocchioStateInputMapping<ad_scalar_t>& mapping,
+                                  const ad_vector_t& state);
+  ad_vector_t getAngularVelocityCppAd(PinocchioInterfaceCppAd& pinocchioInterfaceCppAd, const PinocchioStateInputMapping<ad_scalar_t>& mapping,
+                                      const ad_vector_t& state, const ad_vector_t& input);
 
   std::unique_ptr<CppAdInterface> positionCppAdInterfacePtr_;
+  std::unique_ptr<CppAdInterface> orientationCppAdInterfacePtr_;
   std::unique_ptr<CppAdInterface> velocityCppAdInterfacePtr_;
+  std::unique_ptr<CppAdInterface> angularVelocityCppAdInterfacePtr_;
   std::unique_ptr<CppAdInterface> orientationErrorCppAdInterfacePtr_;
 
   const std::vector<std::string> endEffectorIds_;

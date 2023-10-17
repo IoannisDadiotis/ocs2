@@ -83,6 +83,28 @@ class EndEffectorKinematics {
                                                      const std::vector<quaternion_t>& referenceOrientations) const = 0;
 
   /**
+   * Get absolute orientation in world frame, non-pure virtual functions with meaningless definition.
+   * @note: Exact implementation is only defined for PinocchioEndEffectorKinematicsCppAd() derived class for now.
+   * (see ocs2_pinocchio_interface package)
+   */
+  virtual std::vector<vector_t> getOrientation(const vector_t& state) const {return {vector_t::Zero(1)};}
+  virtual std::vector<VectorFunctionLinearApproximation> getOrientationLinearApproximation(const vector_t& state) const
+  {
+      return {VectorFunctionLinearApproximation()};
+  }
+
+  /**
+   * Get angular velocity in world frame, non-pure virtual functions with meaningless definition.
+   * @note: Exact implementation is only defined for PinocchioEndEffectorKinematicsCppAd() derived class for now.
+   * (see ocs2_pinocchio_interface package)
+   */
+  virtual std::vector<vector3_t> getAngularVelocity(const vector_t& state, const vector_t& input) const {return {vector_t::Zero(1)};}
+  virtual std::vector<VectorFunctionLinearApproximation> getAngularVelocityLinearApproximation(const vector_t& state, const vector_t& input) const
+  {
+      return {VectorFunctionLinearApproximation()};
+  }
+
+  /**
    * Get end-effector position linear approximation in world frame
    *
    * @param [in] state: state vector

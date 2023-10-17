@@ -51,6 +51,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <urdf/model.h>
 #include <kdl_parser/kdl_parser.hpp>
 
+// self-collision
+#include <ocs2_centroidal_model/FactoryFunctions.h>
+#include <ocs2_core/misc/LoadStdVectorOfPair.h>
+
 namespace ocs2 {
 namespace legged_robot {
 
@@ -91,7 +95,28 @@ void LeggedRobotVisualizer::launchVisualizerNode(ros::NodeHandle& nodeHandle) {
     kdl_parser::treeFromUrdfModel(urdfModel, kdlTree);
 
     robotStatePublisherPtr_.reset(new robot_state_publisher::RobotStatePublisher(kdlTree));
+#if ROS_VERSION_MINOR <= 14
+    robotStatePublisherPtr_->publishFixedTransforms("", true);
+#else
     robotStatePublisherPtr_->publishFixedTransforms(true);
+#endif
+    // read if self-collision checking active
+    std::string taskFile;
+    nodeHandle.getParam("/taskFile", taskFile);
+    boost::property_tree::ptree pt;
+    boost::property_tree::read_info(taskFile, pt);
+    bool activateSelfCollision = true;
+    loadData::loadPtreeValue(pt, activateSelfCollision, "selfCollision.activate", true);
+    // activate markers for self-collision visualization
+    if (activateSelfCollision) {
+      std::vector<std::pair<size_t, size_t>> collisionObjectPairs;
+      std::vector<std::pair<std::string, std::string>> collisionLinkPairs;
+      loadData::loadStdVectorOfPair(taskFile, "selfCollision.collisionLinkPairs", collisionLinkPairs, true);
+      loadData::loadStdVectorOfPair(taskFile, "selfCollision.collisionObjectPairs", collisionObjectPairs, true);
+      PinocchioGeometryInterface geomInterface(pinocchioInterface_, collisionLinkPairs, collisionObjectPairs);
+      // set geometry visualization markers
+      geometryVisualization_.reset(new GeometryInterfaceVisualization(pinocchioInterface_, geomInterface, nodeHandle, "odom"));
+    }
   }
 }
 
@@ -111,6 +136,9 @@ void LeggedRobotVisualizer::update(const SystemObservation& observation, const P
     publishOptimizedStateTrajectory(timeStamp, primalSolution.timeTrajectory_, primalSolution.stateTrajectory_,
                                     primalSolution.modeSchedule_);
     lastTime_ = observation.time;
+    if (geometryVisualization_ != nullptr) {
+      geometryVisualization_->publishDistances(centroidal_model::getGeneralizedCoordinates(observation.state, centroidalModelInfo_));
+    }
   }
 }
 
@@ -144,7 +172,11 @@ void LeggedRobotVisualizer::publishJointTransforms(ros::Time timeStamp, const ve
                                                    {"LH_HAA", jointAngles[3]}, {"LH_HFE", jointAngles[4]},  {"LH_KFE", jointAngles[5]},
                                                    {"RF_HAA", jointAngles[6]}, {"RF_HFE", jointAngles[7]},  {"RF_KFE", jointAngles[8]},
                                                    {"RH_HAA", jointAngles[9]}, {"RH_HFE", jointAngles[10]}, {"RH_KFE", jointAngles[11]}};
+#if ROS_VERSION_MINOR <= 14
+    robotStatePublisherPtr_->publishTransforms(jointPositions, timeStamp, "");
+#else
     robotStatePublisherPtr_->publishTransforms(jointPositions, timeStamp);
+#endif
   }
 }
 

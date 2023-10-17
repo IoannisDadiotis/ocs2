@@ -64,6 +64,20 @@ class ReferenceManagerDecorator : public ReferenceManagerInterface {
     referenceManagerPtr_->setTargetTrajectories(std::move(targetTrajectories));
   }
 
+  // Functions for TargetTrajectories that concern a target frame
+  const TargetTrajectories& getFrameTargetTrajectories(const int& targetFrameIndex) const override {
+      return referenceManagerPtr_->getFrameTargetTrajectories(targetFrameIndex);
+  }
+  void setFrameTargetTrajectories(const TargetTrajectories& targetTrajectories, int targetFrameIndex) override {
+    referenceManagerPtr_->setFrameTargetTrajectories(targetTrajectories, targetFrameIndex);
+  }
+  void setFrameTargetTrajectories(TargetTrajectories&& targetTrajectories, int targetFrameIndex) override {
+    referenceManagerPtr_->setFrameTargetTrajectories(std::move(targetTrajectories), targetFrameIndex);
+  }
+
+  // methods to get and change the status of force adaptation
+  bool isForceAdaptationActive() const override {return referenceManagerPtr_->isForceAdaptationActive();}
+  void switchForceAdaptationStatus() override {referenceManagerPtr_->switchForceAdaptationStatus();}
  protected:
   std::shared_ptr<ReferenceManagerInterface> referenceManagerPtr_;
 };

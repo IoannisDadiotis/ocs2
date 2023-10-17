@@ -52,7 +52,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace ocs2 {
 namespace legged_robot {
 
-class LeggedRobotInterface final : public RobotInterface {
+class LeggedRobotInterface : public RobotInterface {
  public:
   /**
    * Constructor
@@ -100,6 +100,7 @@ class LeggedRobotInterface final : public RobotInterface {
                                                                   size_t contactPointIndex, bool useAnalyticalGradients);
   std::unique_ptr<StateInputConstraint> getNormalVelocityConstraint(const EndEffectorKinematics<scalar_t>& eeKinematics,
                                                                     size_t contactPointIndex, bool useAnalyticalGradients);
+  std::unique_ptr<StateCost> getSelfCollisionConstraint(const std::string& taskFile, const std::string& urdfFile, const std::string& prefix);
 
   ModelSettings modelSettings_;
   ddp::Settings ddpSettings_;

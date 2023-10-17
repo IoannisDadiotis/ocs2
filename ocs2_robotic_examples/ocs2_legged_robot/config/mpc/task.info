@@ -105,7 +105,7 @@ mpc
 
   debugPrint                      false
 
-  mpcDesiredFrequency             50  ; [Hz]
+  mpcDesiredFrequency             -1  ; [Hz]
   mrtDesiredFrequency             400 ; [Hz]
 }
 
@@ -219,4 +219,37 @@ frictionConeSoftConstraint
   ; relaxed log barrier parameters
   mu                     0.1
   delta                  5.0
+}
+
+selfCollision
+{
+  ; activate self-collision constraint
+  activate  true
+
+  ; Self Collision raw object pairs
+  collisionObjectPairs
+  {
+    [0] "35, 19"
+    [1] "35, 20"
+    [2] "36, 19"
+    [3] "36, 20"
+  }
+
+  ; Self Collision pairs
+  collisionLinkPairs
+  {
+    [0] "RH_FOOT, LH_FOOT"
+    ;[1] "torso_2, arm1_6"
+    ;[2] "torso_2, arm1_5"
+    ;[3] "link_that_doesnt_exist, arm1_7"
+  }
+
+  ; minimum distance allowed between the pairs
+  minimumDistance  0.01
+
+  ; relaxed log barrier mu
+  mu     1e-2
+
+  ; relaxed log barrier delta
+  delta  1e-3
 }

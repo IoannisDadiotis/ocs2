@@ -85,10 +85,10 @@ std::ostream& operator<<(std::ostream& stream, const ModeSchedule& modeSchedule)
 /**
  * Gets the number of events that have preceded the given event time.
  *
- * @param [in] timeTrajectory: A trajectory of timestamps.
- * @param [in] postEventIndices: An array of post-event time index in the time trajectory.
+ * @param [in] timeTrajectory: A trajectory of timestamps (includes but not restricted to eventTimes).
+ * @param [in] postEventIndices: An array of post-event time index in the time trajectory. (mark timestamps as events)
  * @param [in] eventTime: The requested event time.
- * @return The number of events that have preceded the given event time.
+ * @return The number of events (between the ones in the timeTrajectory) that have preceded the given event time.
  */
 size_t getNumberOfPrecedingEvents(const scalar_array_t& timeTrajectory, const size_array_t& postEventIndices, scalar_t eventTime);
 

@@ -35,6 +35,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // CppAD
 #include <ocs2_core/automatic_differentiation/Types.h>
+#include <cppad/cppad.hpp>
+
+#include <ocs2_robotic_tools/common/SkewSymmetricMatrix.h>
 
 namespace ocs2 {
 
@@ -72,6 +75,35 @@ Eigen::Matrix<SCALAR_T, 3, 4> quaternionDistanceJacobian(const Eigen::Quaternion
 }
 
 /**
+ * Compute the rotation matrix t_R_w between two 3D vectors, a rotated and a rotating one.
+ * E.g. between the local unit normal vector of a surface f_l (rotating) and the unit normal vector
+ * of the world f_w (rotated), such that f_w = t_R_w * f_l .
+ * For information regarding the formula see:
+ * https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
+ *
+ * @param [in] rotatingVector
+ * @param [in] rotatedVector
+ * @return rotation matrix 3x3
+ */
+template <typename SCALAR_T>
+Eigen::Matrix<SCALAR_T, 3, 3> getRotationMatrixBetweenVectors(const Eigen::Matrix<SCALAR_T, 3, 1>& rotatingVector,
+                                                              const Eigen::Matrix<SCALAR_T, 3, 1>& rotatedVector) {
+
+    auto vectorsCrossProduct = rotatingVector.cross(rotatedVector);
+    auto vectorsDotProduct = rotatingVector.dot(rotatedVector);
+    Eigen::Matrix<SCALAR_T, 3, 3> t_R_w = Eigen::Matrix<SCALAR_T, 3, 3>::Identity();
+    if (vectorsDotProduct != -1) {
+        auto vectorsCrossProductSkewSymmetric = skewSymmetricMatrix(vectorsCrossProduct);
+        t_R_w += vectorsCrossProductSkewSymmetric +
+                vectorsCrossProductSkewSymmetric * vectorsCrossProductSkewSymmetric / (1 + vectorsDotProduct);
+    }
+    else {          // case of vectors pointing to opposite directions
+        t_R_w(2, 2) = -1.0;
+    }
+    return t_R_w;
+}
+
+/**
  * Compute the quaternion corresponding to euler angles zyx
  *
  * @param [in] eulerAnglesZyx
@@ -83,6 +115,21 @@ Eigen::Quaternion<SCALAR_T> getQuaternionFromEulerAnglesZyx(const Eigen::Matrix<
   return Eigen::AngleAxis<SCALAR_T>(eulerAnglesZyx(0), Eigen::Matrix<SCALAR_T, 3, 1>::UnitZ()) *
          Eigen::AngleAxis<SCALAR_T>(eulerAnglesZyx(1), Eigen::Matrix<SCALAR_T, 3, 1>::UnitY()) *
          Eigen::AngleAxis<SCALAR_T>(eulerAnglesZyx(2), Eigen::Matrix<SCALAR_T, 3, 1>::UnitX());
+  // clang-format on
+}
+
+/**
+ * Compute the quaternion corresponding to euler angles xyz
+ *
+ * @param [in] eulerAnglesXyz
+ * @return The corresponding quaternion
+ */
+template <typename SCALAR_T>
+Eigen::Quaternion<SCALAR_T> getQuaternionFromEulerAnglesXyz(const Eigen::Matrix<SCALAR_T, 3, 1>& eulerAnglesXyz) {
+  // clang-format off
+  return Eigen::AngleAxis<SCALAR_T>(eulerAnglesXyz(0), Eigen::Matrix<SCALAR_T, 3, 1>::UnitX()) *
+         Eigen::AngleAxis<SCALAR_T>(eulerAnglesXyz(1), Eigen::Matrix<SCALAR_T, 3, 1>::UnitY()) *
+         Eigen::AngleAxis<SCALAR_T>(eulerAnglesXyz(2), Eigen::Matrix<SCALAR_T, 3, 1>::UnitZ());
   // clang-format on
 }
 
@@ -115,6 +162,97 @@ Eigen::Matrix<SCALAR_T, 3, 3> getRotationMatrixFromZyxEulerAngles(const Eigen::M
                         -s2,                  c2 * s3,                   c2 * c3;
   // clang-format on
   return rotationMatrix;
+}
+
+/**
+ * Compute the euler angles from rotation matrix
+ * implemented in accordance with CppAd expr conditional statements to deal with the issue below
+ * "what(): GreaterThanZero cannot be called for non-parameters". This function is a
+ * modified version of Eigen::MatrixBase::eulerAngles
+ * @param [in] matrix the rotation matrix
+ * @param [in] a0, a1, a2 can be 0, 1, 2 for roll pitch yaw, respectively.
+ * @return The euler angles
+ */
+
+template <typename SCALAR_T>
+Eigen::Matrix<SCALAR_T, 3, 1> getEulerAnglesFromRotationMatrix(const Eigen::Matrix<SCALAR_T, 3, 3>& matrix, const size_t& a0, const size_t& a1, const size_t& a2) {
+    EIGEN_USING_STD_MATH(atan2)
+    EIGEN_USING_STD_MATH(sin)
+    EIGEN_USING_STD_MATH(cos)
+    /* Implemented from Graphics Gems IV */
+//    EIGEN_STATIC_ASSERT_MATRIX_SPECIFIC_SIZE(matrix,3,3)
+    using namespace Eigen;
+
+    Matrix<SCALAR_T,3,1> res;
+    typedef Matrix<SCALAR_T,2,1> Vector2;
+
+    const size_t odd = ((a0+1)%3 == a1) ? 0 : 1;
+    const size_t i = a0;
+    const size_t j = (a0 + 1 + odd)%3;
+    const size_t k = (a0 + 2 - odd)%3;
+    if (a0==a2)
+    {
+      res[0] = atan2(matrix.coeff(j,i), matrix.coeff(k,i));
+      if((odd && res[0]<SCALAR_T(0)) || ((!odd) && res[0]>SCALAR_T(0)))
+      {
+        if(res[0] > SCALAR_T(0)) {
+          res[0] -= SCALAR_T(EIGEN_PI);
+        }
+        else {
+          res[0] += SCALAR_T(EIGEN_PI);
+        }
+        SCALAR_T s2 = Vector2(matrix.coeff(j,i), matrix.coeff(k,i)).norm();
+        res[1] = -atan2(s2, matrix.coeff(i,i));
+      }
+      else
+      {
+        SCALAR_T s2 = Vector2(matrix.coeff(j,i), matrix.coeff(k,i)).norm();
+        res[1] = atan2(s2, matrix.coeff(i,i));
+      }
+
+      // With a=(0,1,0), we have i=0; j=1; k=2, and after computing the first two angles,
+      // we can compute their respective rotation, and apply its inverse to M. Since the result must
+      // be a rotation around x, we have:
+      //
+      //  c2  s1.s2 c1.s2                   1  0   0
+      //  0   c1    -s1       *    M    =   0  c3  s3
+      //  -s2 s1.c2 c1.c2                   0 -s3  c3
+      //
+      //  Thus:  m11.c1 - m21.s1 = c3  &   m12.c1 - m22.s1 = s3
+
+      SCALAR_T s1 = sin(res[0]);
+      SCALAR_T c1 = cos(res[0]);
+      res[2] = atan2(c1*matrix.coeff(j,k)-s1*matrix.coeff(k,k), c1*matrix.coeff(j,j) - s1 * matrix.coeff(k,j));
+    }
+    else
+    {
+      res[0] = atan2(matrix.coeff(j,k), matrix.coeff(k,k));
+      SCALAR_T c2 = Vector2(matrix.coeff(i,i), matrix.coeff(i,j)).norm();
+
+      // a = ((!odd) && res[0]>SCALAR_T(0))     // replaced by below
+      const SCALAR_T a = CppAD::CondExpEq(SCALAR_T(!odd), SCALAR_T(1), CppAD::CondExpGt(res[0], SCALAR_T(0), SCALAR_T(1), SCALAR_T(0)), SCALAR_T(0));
+//      if((odd && res[0]<SCALAR_T(0)) || ((!odd) && res[0]>SCALAR_T(0))) {     // replaced by below
+      if((odd && res[0]<SCALAR_T(0)) || (a == SCALAR_T(1))) {
+        res[0] += CppAD::CondExpGt(res[0], SCALAR_T(0), -SCALAR_T(EIGEN_PI), SCALAR_T(EIGEN_PI));
+//        if(res[0] > SCALAR_T(0)) {        // replaced by above
+//          res[0] -= SCALAR_T(EIGEN_PI);
+//        }
+//        else {
+//          res[0] += SCALAR_T(EIGEN_PI);
+//        }
+        res[1] = atan2(-matrix.coeff(i,k), -c2);
+      }
+      else
+        res[1] = atan2(-matrix.coeff(i,k), c2);
+      SCALAR_T s1 = sin(res[0]);
+      SCALAR_T c1 = cos(res[0]);
+      res[2] = atan2(s1*matrix.coeff(k,i)-c1*matrix.coeff(j,i), c1*matrix.coeff(j,j) - s1 * matrix.coeff(k,j));
+    }
+//    if (!odd)
+    if (SCALAR_T(!odd) == SCALAR_T(1))
+      res = -res;
+
+    return res;
 }
 
 /**

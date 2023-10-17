@@ -158,6 +158,14 @@ class MRT_BASE {
    */
   void addMrtObserver(std::shared_ptr<MrtObserver> mrtObserver) { observerPtrArray_.push_back(std::move(mrtObserver)); };
 
+  /**
+   * Returns the object pointed by activePrimalSolutionPtr_
+   */
+  PrimalSolution getActivePrimalSolution() const {
+    PrimalSolution activePrimalSolution = *activePrimalSolutionPtr_;
+    return activePrimalSolution;
+  };
+
  protected:
   void moveToBuffer(std::unique_ptr<CommandData> commandDataPtr, std::unique_ptr<PrimalSolution> primalSolutionPtr,
                     std::unique_ptr<PerformanceIndex> performanceIndicesPtr);

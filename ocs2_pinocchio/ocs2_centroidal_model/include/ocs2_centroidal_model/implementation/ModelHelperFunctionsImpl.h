@@ -135,7 +135,7 @@ Eigen::Matrix<SCALAR_T, 6, 3> getCentroidalMomentumZyxGradient(const PinocchioIn
 
   switch (info.centroidalModelType) {
     case CentroidalModelType::FullCentroidalDynamics: {
-      Iworldframe = data.Ig.inertia().matrix();
+      Iworldframe = data.Ig.inertia().matrix();     // TODO: check if this is really updated without pinocchio::ccrba around
       Ibaseframe.noalias() = R.transpose() * (Iworldframe * R);
       rworldframe = q.template head<3>() - data.com[0];
       rbaseframe.noalias() = R.transpose() * rworldframe;

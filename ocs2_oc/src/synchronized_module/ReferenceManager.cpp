@@ -34,14 +34,33 @@ namespace ocs2 {
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-ReferenceManager::ReferenceManager(TargetTrajectories initialTargetTrajectories, ModeSchedule initialModeSchedule)
-    : targetTrajectories_(std::move(initialTargetTrajectories)), modeSchedule_(std::move(initialModeSchedule)) {}
+//ReferenceManager::ReferenceManager(TargetTrajectories initialTargetTrajectories,
+//                                   ModeSchedule initialModeSchedule)
+//    : targetTrajectories_(std::move(initialTargetTrajectories)), modeSchedule_(std::move(initialModeSchedule)){}
+
+/******************************************************************************************************/
+/******************************************************************************************************/
+/******************************************************************************************************/
+ReferenceManager::ReferenceManager(std::vector<TargetTrajectories> initialFramesTargetTrajectories,
+                                   TargetTrajectories initialTargetTrajectories,
+                                   ModeSchedule initialModeSchedule)
+    : targetTrajectories_(std::move(initialTargetTrajectories)), modeSchedule_(std::move(initialModeSchedule))
+{
+    // initialize the BufferedValues within framesTargetTrajectories_
+    for (int i = 0; i < initialFramesTargetTrajectories.size(); i++) {
+        framesTargetTrajectories_.push_back(
+                    BufferedValue<TargetTrajectories>(std::move(initialFramesTargetTrajectories[i]))
+                    );
+    }
+}
 
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
 void ReferenceManager::preSolverRun(scalar_t initTime, scalar_t finalTime, const vector_t& initState) {
   targetTrajectories_.updateFromBuffer();
+  for (int i = 0; i < framesTargetTrajectories_.size(); i++)
+    framesTargetTrajectories_[i].updateFromBuffer();
   modeSchedule_.updateFromBuffer();
   modifyReferences(initTime, finalTime, initState, targetTrajectories_.get(), modeSchedule_.get());
 }

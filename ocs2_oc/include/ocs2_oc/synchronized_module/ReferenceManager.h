@@ -40,7 +40,13 @@ namespace ocs2 {
  */
 class ReferenceManager : public ReferenceManagerInterface {
  public:
-  explicit ReferenceManager(TargetTrajectories initialTargetTrajectories = TargetTrajectories(),
+//  // Constructor without frameTargetTrajectories
+//  explicit ReferenceManager(TargetTrajectories initialTargetTrajectories = TargetTrajectories(),
+//                            ModeSchedule initialModeSchedule = ModeSchedule());
+
+  // Constructor with frameTargetTrajectories
+    explicit ReferenceManager(std::vector<TargetTrajectories> initialFramesTargetTrajectories = {TargetTrajectories()},
+                            TargetTrajectories initialTargetTrajectories = TargetTrajectories(),
                             ModeSchedule initialModeSchedule = ModeSchedule());
 
   ~ReferenceManager() override = default;
@@ -58,6 +64,20 @@ class ReferenceManager : public ReferenceManagerInterface {
   void setTargetTrajectories(TargetTrajectories&& targetTrajectories) override {
     return targetTrajectories_.setBuffer(std::move(targetTrajectories));
   }
+
+  // Functions for TargetTrajectories that concern a target frame
+  const TargetTrajectories& getFrameTargetTrajectories(const int& targetFrameIndex) const override {
+      return framesTargetTrajectories_[targetFrameIndex].get(); }
+  void setFrameTargetTrajectories(const TargetTrajectories& targetTrajectories, int targetFrameIndex) override {
+    return framesTargetTrajectories_[targetFrameIndex].setBuffer(targetTrajectories);
+  }
+  void setFrameTargetTrajectories(TargetTrajectories&& targetTrajectories, int targetFrameIndex) override {
+    return framesTargetTrajectories_[targetFrameIndex].setBuffer(std::move(targetTrajectories));
+  }
+
+  // methods to get and change the status of force adaptation
+  bool isForceAdaptationActive() const override {return forceAdaptationActivated_;}
+  void switchForceAdaptationStatus() override {forceAdaptationActivated_ = !forceAdaptationActivated_;}
 
  protected:
   /**
@@ -77,6 +97,8 @@ class ReferenceManager : public ReferenceManagerInterface {
  private:
   BufferedValue<ModeSchedule> modeSchedule_;
   BufferedValue<TargetTrajectories> targetTrajectories_;
+  // vector of BufferedValues depending on the number of target frames
+  std::vector<BufferedValue<TargetTrajectories>> framesTargetTrajectories_;
 };
 
 }  // namespace ocs2

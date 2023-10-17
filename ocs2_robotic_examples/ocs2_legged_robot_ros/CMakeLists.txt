@@ -23,6 +23,7 @@ set(CATKIN_PACKAGE_DEPENDENCIES
   ocs2_msgs
   ocs2_ros_interfaces
   ocs2_legged_robot
+  ocs2_self_collision_visualization
 )
 
 find_package(catkin REQUIRED COMPONENTS

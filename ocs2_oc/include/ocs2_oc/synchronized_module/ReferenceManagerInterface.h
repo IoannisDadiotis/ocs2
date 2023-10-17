@@ -90,6 +90,28 @@ class ReferenceManagerInterface {
    * @note: This method must be thread safe.
    */
   virtual void setTargetTrajectories(TargetTrajectories&& targetTrajectories) = 0;
+
+  // Functions for TargetTrajectories that concern a target frame
+  /** Returns a const reference to the active TargetTrajectories. */
+  virtual const TargetTrajectories& getFrameTargetTrajectories(const int& targetFrameIndex) const = 0;
+
+  /**
+   * Sets the TargetTrajectories to the buffer. The buffer will move to active ModeSchedule once preSolverRun() is called.
+   * @note: This method must be thread safe.
+   */
+  virtual void setFrameTargetTrajectories(const TargetTrajectories& targetTrajectories, int targetFrameIndex) = 0;
+
+  /**
+   * Move the TargetTrajectories to the buffer. The buffer will move to active ModeSchedule once preSolverRun() is called.
+   * @note: This method must be thread safe.
+   */
+  virtual void setFrameTargetTrajectories(TargetTrajectories&& targetTrajectories, int targetFrameIndex) = 0;
+
+  // get or change the activation status of the force adaptation
+  virtual bool isForceAdaptationActive() const = 0;
+  virtual void switchForceAdaptationStatus() = 0;
+  bool forceAdaptationActivated_{false};        // force adaptation related
+
 };
 
 }  // namespace ocs2
