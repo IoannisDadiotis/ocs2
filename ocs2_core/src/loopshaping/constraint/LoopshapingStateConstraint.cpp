@@ -38,9 +38,9 @@ namespace ocs2 {
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-vector_t LoopshapingStateConstraint::getValue(scalar_t t, const vector_t& x, const PreComputation& preComp) const {
+vector_array_t LoopshapingStateConstraint::getValue(scalar_t t, const vector_t& x, const PreComputation& preComp) const {
   if (this->empty()) {
-    return vector_t::Zero(0);
+    return vector_array_t();
   }
 
   const LoopshapingPreComputation& preCompLS = cast<LoopshapingPreComputation>(preComp);
@@ -56,7 +56,7 @@ vector_t LoopshapingStateConstraint::getValue(scalar_t t, const vector_t& x, con
 VectorFunctionLinearApproximation LoopshapingStateConstraint::getLinearApproximation(scalar_t t, const vector_t& x,
                                                                                      const PreComputation& preComp) const {
   if (this->empty()) {
-    return VectorFunctionLinearApproximation::Zero(0, x.rows(), 0);
+    return VectorFunctionLinearApproximation::Zero(0, x.rows());
   }
 
   const LoopshapingPreComputation& preCompLS = cast<LoopshapingPreComputation>(preComp);
@@ -87,7 +87,7 @@ VectorFunctionLinearApproximation LoopshapingStateConstraint::getLinearApproxima
 VectorFunctionQuadraticApproximation LoopshapingStateConstraint::getQuadraticApproximation(scalar_t t, const vector_t& x,
                                                                                            const PreComputation& preComp) const {
   if (this->empty()) {
-    return VectorFunctionQuadraticApproximation::Zero(0, x.rows(), 0);
+    return VectorFunctionQuadraticApproximation::Zero(0, x.rows());
   }
 
   const LoopshapingPreComputation& preCompLS = cast<LoopshapingPreComputation>(preComp);

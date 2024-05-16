@@ -21,6 +21,7 @@ add_message_files(
     multiplier.msg
     joint_impedance_mapped_policy.msg
     joint_acceleration_mapped_policy.msg
+    constraint.msg
 )
 
 add_service_files(
