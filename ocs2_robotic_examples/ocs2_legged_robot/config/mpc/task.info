@@ -257,7 +257,7 @@ frictionConeSoftConstraint
 selfCollision
 {
   ; activate self-collision constraint
-  activate  true
+  activate  false
 
   ; Self Collision raw object pairs
   collisionObjectPairs
