@@ -82,6 +82,7 @@ link_directories(
 
 # Legged robot interface library
 add_library(${PROJECT_NAME}
+  src/cost/QuadraticStateInputCost.cpp
   src/common/ModelSettings.cpp
   src/dynamics/LeggedRobotDynamicsAD.cpp
   src/constraint/EndEffectorLinearConstraint.cpp

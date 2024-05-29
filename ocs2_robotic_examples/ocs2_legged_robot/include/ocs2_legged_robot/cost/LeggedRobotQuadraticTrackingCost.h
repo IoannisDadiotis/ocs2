@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ocs2_centroidal_model/CentroidalModelInfo.h>
 #include <ocs2_core/cost/QuadraticStateCost.h>
-#include <ocs2_core/cost/QuadraticStateInputCost.h>
+#include <ocs2_legged_robot/cost/QuadraticStateInputCost.h>
 
 #include "ocs2_legged_robot/common/utils.h"
 #include "ocs2_legged_robot/reference_manager/SwitchedModelReferenceManager.h"

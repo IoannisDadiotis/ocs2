@@ -64,10 +64,11 @@ vector_t ZeroForceConstraint::getValue(scalar_t time, const vector_t& state, con
 VectorFunctionLinearApproximation ZeroForceConstraint::getLinearApproximation(scalar_t time, const vector_t& state, const vector_t& input,
                                                                               const PreComputation& preComp) const {
   VectorFunctionLinearApproximation approx;
-  approx.f = getValue(time, state, input, preComp);
-  approx.dfdx = matrix_t::Zero(3, state.size());
-  approx.dfdu = matrix_t::Zero(3, input.size());
-  approx.dfdu.middleCols<3>(3 * contactPointIndex_).diagonal() = vector_t::Ones(3);
+  approx.dfdx = matrix_t::Zero(3, state.size());        // partial derivative wrt state already set, is zero
+  // TODO: complete the code below
+  // approx.dfdu =                                      // here initialize partial derivative wrt input as all zeros (size 3 x input.size())
+                                                        // here modify the elements of dfdu that need to be ones, access the leg index with contactPointIndex_
+  // approx.f =                                         // here acquire the constraint value using getValue method of the class
   return approx;
 }
 
