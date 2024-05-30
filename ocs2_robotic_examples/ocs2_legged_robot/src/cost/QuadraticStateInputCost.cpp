@@ -56,7 +56,7 @@ QuadraticStateInputCost* QuadraticStateInputCost::clone() const {
 scalar_t QuadraticStateInputCost::getValue(scalar_t time, const vector_t& state, const vector_t& input,
                                            const TargetTrajectories& targetTrajectories, const PreComputation&) const {
   vector_t stateDeviation, inputDeviation;
-  // TODO: complete the code below
+  // TODO: complete the code below, state and input gains are defined as Q_, R_ class member variables
   // std::tie(stateDeviation, inputDeviation) =             // here state & input deviations using getStateInputDeviation
   scalar_t cost_term = 0.0;                                 // replace this with the quadratic cost term expression
   return cost_term;
