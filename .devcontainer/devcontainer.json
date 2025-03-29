@@ -13,6 +13,7 @@
   "mounts": [
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history,target=/home/vscode/.bash_history,type=bind"
   ],
-  "postCreateCommand": "bash -c 'source /opt/ros/noetic/setup.bash && cd /workspace/src/${localWorkspaceFolderBasename}/.. && catkin build'"
+  // build the catkin workspace, grab a coffee since this will take some time.
+  "postCreateCommand": "bash -c 'source /opt/ros/noetic/setup.bash && cd /workspace && catkin build'"
 
 }

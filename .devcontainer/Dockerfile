@@ -46,6 +46,13 @@ RUN apt update \
     libassimp-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# install gnome terminal and other dependencies for avoidding errors
+RUN apt update \
+    && apt install -y dbus-x11 \                  
+    libcanberra-gtk-module \
+    gnome-terminal \
+    && rm -rf /var/lib/apt/lists/*
+
 # install rqt plot tool
 RUN apt-get update \
     && apt-get install -y ros-noetic-rqt-multiplot \
@@ -61,9 +68,10 @@ RUN git clone --recurse-submodules https://github.com/leggedrobotics/pinocchio.g
     && git clone https://github.com/leggedrobotics/ocs2_robotic_assets.git \
     && git clone --depth 1 https://github.com/raisimTech/raisimLib.git -b v1.1.01
 
-#install grid map msgs, needed from raisim
-RUN sudo apt update \
+#install grid map msgs, needed from raisim and rviz-plugin to skip error
+RUN sudo apt-get update \
 && apt-get install -y ros-noetic-grid-map-msgs \
+ros-${ROS_DISTRO}-grid-map-rviz-plugin \
 && rm -rf /var/lib/apt/lists/*
 
 # install raisim
@@ -89,27 +97,6 @@ RUN cd /workspace/src/raisimLib \
 WORKDIR /workspace
 RUN catkin init \
     && catkin config --extend /opt/ros/${ROS_DISTRO} --blacklist ocs2_doc -DCMAKE_BUILD_TYPE=RelWithDebInfo
-
-# Copy the meta-package and other packages from the parent folder of .devcontainer
-# RUN mkdir src/ocs2
-# RUN ls /workspace/src
-# COPY ../ /workspace/src/ocs2/
-# RUN ls /workspace/src/ocs2
-
-# Source ROS and build the workspace
-# RUN /bin/bash -c "source /opt/ros/noetic/setup.bash"
-# RUN cd /workspace \
-#     && catkin build ocs2
-# copy ocs2 repo
-# WORKDIR /workspace/src
-# RUN mkdir ocs2
-# COPY .. /workspace/src/ocs2
-
-# build catkin workspace
-# WORKDIR /workspace
-# RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin clean -y && catkin build --verbose"
-
-# # RUN catkin build ocs2
 
 # source catkin pkgs
 RUN echo "source /workspace/devel/setup.bash" >> ~/.bashrc
