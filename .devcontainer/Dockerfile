@@ -51,6 +51,7 @@ RUN apt-get update \
     && apt-get install -y ros-noetic-rqt-multiplot \
     checkinstall \
     wget \
+    nano \
     && rm -rf /var/lib/apt/lists/*
 
 # Clone pinocchio, hpp-fcl and raisim
@@ -87,12 +88,28 @@ RUN cd /workspace/src/raisimLib \
 # Set up catkin workspace
 WORKDIR /workspace
 RUN catkin init \
-    && catkin config --extend /opt/ros/${ROS_DISTRO} \
-    && catkin config -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    && catkin config --extend /opt/ros/${ROS_DISTRO} --blacklist ocs2_doc -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+# Copy the meta-package and other packages from the parent folder of .devcontainer
+# RUN mkdir src/ocs2
+# RUN ls /workspace/src
+# COPY ../ /workspace/src/ocs2/
+# RUN ls /workspace/src/ocs2
+
+# Source ROS and build the workspace
+# RUN /bin/bash -c "source /opt/ros/noetic/setup.bash"
+# RUN cd /workspace \
+#     && catkin build ocs2
+# copy ocs2 repo
+# WORKDIR /workspace/src
+# RUN mkdir ocs2
+# COPY .. /workspace/src/ocs2
 
 # build catkin workspace
-WORKDIR /workspace
-RUN catkin build
+# WORKDIR /workspace
+# RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && catkin clean -y && catkin build --verbose"
+
+# # RUN catkin build ocs2
 
 # source catkin pkgs
 RUN echo "source /workspace/devel/setup.bash" >> ~/.bashrc
