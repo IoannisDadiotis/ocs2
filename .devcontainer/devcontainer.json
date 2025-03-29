@@ -1,5 +1,5 @@
 {
-  "name": "noetic desktop",
+  "name": "ocs2 containerized",
   "dockerFile": "Dockerfile",
   "runArgs": [
     "--privileged",
